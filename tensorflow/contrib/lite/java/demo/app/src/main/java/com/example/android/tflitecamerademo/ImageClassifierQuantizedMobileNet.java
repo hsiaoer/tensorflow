@@ -24,6 +24,8 @@ import java.io.IOException;
  */
 public class ImageClassifierQuantizedMobileNet extends ImageClassifier {
 
+  public static final String modelName = "mobilenet_quant.tflite";
+
   /**
    * An array to hold inference results, to be feed into Tensorflow Lite as outputs.
    * This isn't part of the super class, because we need a primitive array here.
@@ -44,7 +46,7 @@ public class ImageClassifierQuantizedMobileNet extends ImageClassifier {
   protected String getModelPath() {
     // you can download this file from
     // https://storage.googleapis.com/download.tensorflow.org/models/tflite/mobilenet_v1_224_android_quant_2017_11_08.zip
-    return "mobilenet_quant_v1_224.tflite";
+    return modelName;
   }
 
   @Override

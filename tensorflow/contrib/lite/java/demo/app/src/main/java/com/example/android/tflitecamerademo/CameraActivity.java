@@ -16,20 +16,76 @@ limitations under the License.
 package com.example.android.tflitecamerademo;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
-/** Main {@code Activity} class for the Camera app. */
-public class CameraActivity extends Activity {
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.lang.ref.WeakReference;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.logging.Logger;
 
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState);
-    setContentView(R.layout.activity_camera);
-    if (null == savedInstanceState) {
-      getFragmentManager()
-          .beginTransaction()
-          .replace(R.id.container, Camera2BasicFragment.newInstance())
-          .commit();
+/**
+ * Main {@code Activity} class for the Camera app.
+ */
+public class CameraActivity extends Activity {
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private static final String DOWNLOAD_URL = "https://s3.us-east-2.amazonaws.com/eric-test-staging/mobilenet_quant_v1_224.tflite";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_camera);
+
+        new RetrieveModelTask(this).execute(DOWNLOAD_URL);
+
     }
-  }
+
+    public class RetrieveModelTask extends AsyncTask<String, String, String> {
+        private WeakReference<Activity> activity;
+
+        public RetrieveModelTask(Activity activity) {
+            this.activity = new WeakReference<Activity>(activity);
+        }
+
+        protected String doInBackground(String... url) {
+            try {
+                URL wallpaperURL = new URL(url[0]);
+                URLConnection connection = wallpaperURL.openConnection();
+                InputStream inputStream = new BufferedInputStream(wallpaperURL.openStream(), 8192);
+                File appDir = this.activity.get().getFilesDir();
+                File tfLiteFile = new File(appDir, ImageClassifierQuantizedMobileNet.modelName);
+                FileOutputStream outputStream = new FileOutputStream(tfLiteFile);
+
+                byte buffer[] = new byte[8192];
+                int dataSize;
+                int loadedSize = 0;
+                while ((dataSize = inputStream.read(buffer)) != -1) {
+                    loadedSize += dataSize;
+                    logger.info("Downloaded: " + loadedSize);
+                    outputStream.write(buffer, 0, dataSize);
+                }
+
+                outputStream.close();
+                logger.info("DOWNLOADED:" + tfLiteFile.getAbsolutePath());
+                return tfLiteFile.getAbsolutePath();
+
+            } catch (Exception e) {
+                logger.warning("WTF HAPPENED");
+                logger.warning(e.toString());
+            }
+
+            return null;
+        }
+
+        protected void onPostExecute(String absolutePathForFile) {
+                this.activity.get().getFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, Camera2BasicFragment.newInstance())
+                        .commit();
+        }
+    }
 }

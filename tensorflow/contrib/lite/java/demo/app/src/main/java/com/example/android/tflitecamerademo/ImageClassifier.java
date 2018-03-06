@@ -24,6 +24,7 @@ import android.util.Log;
 import org.tensorflow.lite.Interpreter;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -37,6 +38,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.logging.Logger;
 
 /**
  * Classifies images with Tensorflow Lite.
@@ -163,11 +165,13 @@ public abstract class ImageClassifier {
 
   /** Memory-map the model file in Assets. */
   private MappedByteBuffer loadModelFile(Activity activity) throws IOException {
-    AssetFileDescriptor fileDescriptor = activity.getAssets().openFd(getModelPath());
-    FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+    File appDir = activity.getFilesDir();
+    File tfLiteFile = new File(appDir, getModelPath());
+    Logger.getLogger(getClass().getSimpleName()).info("MODEL TO LOAD: " + tfLiteFile.getAbsolutePath());
+    FileInputStream inputStream = new FileInputStream(tfLiteFile);
     FileChannel fileChannel = inputStream.getChannel();
-    long startOffset = fileDescriptor.getStartOffset();
-    long declaredLength = fileDescriptor.getDeclaredLength();
+    long startOffset = 0;
+    long declaredLength = tfLiteFile.length();
     return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
   }
 

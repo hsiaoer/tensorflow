@@ -51,7 +51,7 @@ public class ImageClassifierFloatInception extends ImageClassifier {
   protected String getModelPath() {
     // you can download this file from
     // https://storage.googleapis.com/download.tensorflow.org/models/tflite/inception_v3_slim_2016_android_2017_11_10.zip
-    return "inceptionv3_slim_2016.tflite";
+    return "mobilenet_quant_v1_224.tflite";
   }
 
   @Override
